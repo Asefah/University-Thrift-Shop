@@ -1,5 +1,6 @@
 import React, { useState, useEffect, type JSX } from "react";
 import { supabase } from "../supabaseClient";
+import type { User, Session } from "@supabase/supabase-js";
 
 interface ImageRow {
   id?: number;
@@ -8,28 +9,60 @@ interface ImageRow {
 }
 
 export default function ImgUpload(): JSX.Element {
+  const [user, setUser] = useState<User | null>(null);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [uploading, setUploading] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string>("");
   const [gallery, setGallery] = useState<ImageRow[]>([]);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
 
+  // Fetch images from Supabase
   const fetchImages = async (): Promise<void> => {
     const { data, error } = await supabase
       .from("images")
       .select("*")
       .order("created_at", { ascending: false });
 
-    if (error) {
-      console.error("Error fetching images:", error.message);
-      return;
-    }
-    setGallery(data || []);
+    if (!error) setGallery(data || []);
+    else console.error("Error fetching images:", error.message);
   };
 
+  // Load session on mount + listen for changes
   useEffect(() => {
+    supabase.auth.getSession().then(({ data }: { data: { session: Session | null } }) => {
+      if (data.session) setUser(data.session.user);
+    });
+
+    const { data: listener } = supabase.auth.onAuthStateChange(
+      (_event: string, session: Session | null) => {
+        setUser(session?.user ?? null);
+      }
+    );
+
     fetchImages();
+
+    return () => {
+      listener.subscription.unsubscribe();
+    };
   }, []);
 
+  // Handle login
+  const handleLogin = async (): Promise<void> => {
+    setErrorMessage("");
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+    if (error) setErrorMessage(error.message);
+  };
+
+  // Handle logout
+  const handleLogout = async (): Promise<void> => {
+    await supabase.auth.signOut();
+  };
+
+  // Handle image upload
   const handleImageUpload = async (
     event: React.ChangeEvent<HTMLInputElement>
   ): Promise<void> => {
@@ -41,44 +74,70 @@ export default function ImgUpload(): JSX.Element {
 
     const fileName = `${Date.now()}-${file.name}`;
 
-    // Upload to storage
     const { error: uploadError } = await supabase.storage
       .from("images")
       .upload(fileName, file);
 
     if (uploadError) {
-        console.error('Upload error details:', uploadError);
-        setErrorMessage(uploadError.message);
-        setUploading(false);
-        return;
+      setErrorMessage(uploadError.message);
+      setUploading(false);
+      return;
     }
 
-
-    // Get public URL
     const { data } = supabase.storage
       .from("images")
       .getPublicUrl(fileName);
 
     const publicUrl = data.publicUrl;
-    setImageUrl(publicUrl);
 
-    // Save URL to database
     const { error: insertError } = await supabase
       .from("images")
-      .insert<ImageRow>({ url: publicUrl });
+      .insert({
+        url: publicUrl,
+        user_id: user?.id,
+        created_at: new Date().toISOString()
+      });
 
     if (insertError) {
       setErrorMessage(insertError.message);
     } else {
-      await fetchImages(); // Refresh gallery
+      setImageUrl(publicUrl);
+      await fetchImages();
     }
 
     setUploading(false);
   };
 
+  // If not logged in, show login form
+  if (!user) {
+    return (
+      <div style={{ textAlign: "center" }}>
+        <h2>Please Log In</h2>
+        <input
+          type="email"
+          placeholder="Your @umass.edu email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+        /><br /><br />
+        <input
+          type="password"
+          placeholder="Password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+        /><br /><br />
+        <button onClick={handleLogin}>Log In</button>
+        {errorMessage && <p style={{ color: "red" }}>{errorMessage}</p>}
+      </div>
+    );
+  }
+
+  // If logged in, show uploader + gallery
   return (
     <div style={{ textAlign: "center" }}>
       <h2>Upload Image to Supabase</h2>
+      <p>
+        Welcome, {user.email} <button onClick={handleLogout}>Log Out</button>
+      </p>
       <input
         type="file"
         accept="image/*"
@@ -123,4 +182,3 @@ export default function ImgUpload(): JSX.Element {
     </div>
   );
 }
-
