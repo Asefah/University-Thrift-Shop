@@ -57,7 +57,7 @@ export default function Login() {
         <button onClick={handleSignUp} style={{ marginRight: "5px" }}>
           Sign Up
         </button>
-        <button onClick={handleSignIn}>Log In</button>
+        <button id = "login" onClick={handleSignIn}>Log In</button>
       </div>
 
       {/* Logout button */}
