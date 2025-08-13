@@ -19,6 +19,7 @@ export default function App(): JSX.Element {
       (_event, session) => {
         setSession(session);
       }
+      
     );
 
     return () => {
