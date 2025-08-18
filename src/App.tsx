@@ -2,6 +2,7 @@ import React, { useState, useEffect, type JSX } from "react";
 import { supabase } from "./supabaseClient";
 import ImgUpload from "./Components/imgUpload";
 import Login from "./Components/login";
+import AccountSetup from "./Components/profileSetup";
 import type { Session } from "@supabase/supabase-js";
 
 export default function App(): JSX.Element {
@@ -31,9 +32,18 @@ export default function App(): JSX.Element {
     return <p>Loading...</p>;
   }
 
+  /*return (
+    <div>
+      {session ? <AccountSetup(session?.user?.email)/> : <Login />}
+    </div>
+  );*/
+
   return (
     <div>
-      {session ? <ImgUpload /> : <Login />}
+      {session ? <AccountSetup userEmail = {session?.user?.email || ""} 
+                                userId= {session?.user?.id || ""}/> : <Login />}
     </div>
   );
+
 }
+

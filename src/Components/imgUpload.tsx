@@ -134,7 +134,7 @@ export default function ImgUpload(): JSX.Element {
   // If logged in, show uploader + gallery
   return (
     <div style={{ textAlign: "center" }}>
-      <h2>Upload Image to Supabase</h2>
+      <h2>Upload Image to University Thrift</h2>
       <p>
         Welcome, {user.email} <button onClick={handleLogout}>Log Out</button>
       </p>
