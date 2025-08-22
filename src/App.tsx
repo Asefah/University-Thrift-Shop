@@ -1,6 +1,6 @@
 import React, { useState, useEffect, type JSX } from "react";
 import { supabase } from "./supabaseClient";
-import ImgUpload from "./Components/imgUpload";
+//import ImgUpload from "./Components/imgUpload";
 import Login from "./Components/login";
 import AccountSetup from "./Components/profileSetup";
 import type { Session } from "@supabase/supabase-js";
