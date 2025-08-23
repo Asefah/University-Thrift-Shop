@@ -1,8 +1,9 @@
 import React, { useState, useEffect, type JSX } from "react";
 import { supabase } from "./supabaseClient";
-import ImgUpload from "./Components/imgUpload";
 import Login from "./Components/login";
 import type { Session } from "@supabase/supabase-js";
+import Homepage from "./Components/homePage";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 
 export default function App(): JSX.Element {
   const [session, setSession] = useState<Session | null>(null);
@@ -19,7 +20,6 @@ export default function App(): JSX.Element {
       (_event, session) => {
         setSession(session);
       }
-      
     );
 
     return () => {
@@ -32,8 +32,16 @@ export default function App(): JSX.Element {
   }
 
   return (
-    <div>
-      {session ? <ImgUpload /> : <Login />}
-    </div>
+    <BrowserRouter>
+      {session ? (
+        <Routes>
+          <Route path="/" element={<Homepage />} />
+          {/* You can add more routes later, e.g.: */}
+          {/* <Route path="/category/:id" element={<CategoryPage />} /> */}
+        </Routes>
+      ) : (
+        <Login />
+      )}
+    </BrowserRouter>
   );
 }
