@@ -3,6 +3,8 @@ import { supabase } from "./supabaseClient";
 import Login from "./Components/login";
 import type { Session } from "@supabase/supabase-js";
 import Homepage from "./Components/homePage";
+//import clothingPage from "./Components/clothingPage";
+
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 
 export default function App(): JSX.Element {
